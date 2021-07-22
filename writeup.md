@@ -59,7 +59,7 @@ Słupki błędu odpowiadają centylom: 40-60 wokół mediany.
 
 ![Zarobki a kraj](plots/country_comp.png){width=80% height=80%}
 
-![Zarobki a zawód](plots/graduation_year_comp.png){width=80% height=80%}
+![Zarobki a zawód](plots/profession_comp.png){width=80% height=80%}
 
 ![Zarobki a kierunek](plots/degree_comp.png){width=80% height=80%}
 
@@ -69,7 +69,7 @@ Słupki błędu odpowiadają centylom: 40-60 wokół mediany.
 
 ![Zarobki a rok ukończenia studiów](plots/graduation_year_comp.png){width=80% height=80%}
 
-![Zarobki a wpływ studiów na karierę](plots/graduation_year_comp.png){width=80% height=80%}
+![Zarobki a wpływ studiów na karierę](plots/mim_satisfaction_comp.png){width=80% height=80%}
 
 ### Rozkład pojedynczych cech
 
