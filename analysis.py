@@ -1,6 +1,8 @@
 import collections
 import csv
+from datetime import datetime
 import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
 import numpy as np
 
 # On 17/07/2021
@@ -67,6 +69,8 @@ HIGHEST_EDUCATION = "Najwyższy stopień naukowy ogółem (jeśli inny niż powy
 HIGHEST_EDU_MISSPELLED = "Najwyższy stopień naukowy ogółem (jeśli inne niż powyżej)"
 MIM_EDUCATION = "Najwyższy stopień naukowy uzyskany na wydziale MIM"
 COMPANY_SIZE = "Liczba pracowników firmy/instytucji"
+CITY_SIZE = "Liczba mieszkańców miejsca zamieszkania"
+MIM_SATISFACTION = "W jakim stopniu studia na MIMie pomogły Ci w osiągnięciu obecnej kariery"
 
 
 def data_cleanup(data):
@@ -124,11 +128,50 @@ def _ordered_counter(data, key):
   return ordered
 
 
-def countries_plots(data):
-  filtered_data = [dict(r) for r in data if r[COUNTRY]]
+def _process_small_groups(overall):
+  last_group_id = 5
+  other_values = [k for i, k in enumerate(overall.keys())
+      if i > last_group_id or (
+        last_group_id + 1 < len(overall) and overall[k] == list(overall.values())[last_group_id + 1])]
+  num_other_values = sum([overall[k] for k in other_values])
+  for value in other_values:
+    overall.pop(value)
+
+  if num_other_values:
+    overall["inne"] = num_other_values
+  return overall
+
+
+def _process_label(label):
+  if '/' in label:
+    return label[:label.find('/')]
+  
+  return label
+
+
+def _prepare_legend(axes):
+  all_handles = []
+  all_labels = []
+  for ax in axes:
+    handles, labels = ax.get_legend_handles_labels()
+    for h, l in zip(handles, labels):
+      if l not in all_labels:
+        all_handles.append(h)
+        all_labels.append(l)
+
+  if "inne" in all_labels:
+    idx = all_labels.index("inne")
+    all_labels = all_labels[:idx] + all_labels[idx+1:] + [all_labels[idx]]
+    all_handles = all_handles[:idx] + all_handles[idx+1:] + [all_handles[idx]]
+
+  return all_handles, all_labels
+
+
+def pie_per_degree(data, key):
+  filtered_data = [dict(r) for r in data if r[key]]
   for i, r in enumerate(filtered_data):
-    if "Stany Zjednoczone Ameryki" in r[COUNTRY]:
-      r[COUNTRY] = "USA"
+    if "Stany Zjednoczone Ameryki" in r[key]:
+      r[key] = "USA"
 
   per_degree = collections.defaultdict(lambda: [])
   for r in filtered_data:
@@ -137,43 +180,37 @@ def countries_plots(data):
   degrees = [degree
       for degree, responses in per_degree.items() if len(responses) >= 5]
 
-  countries_overall = _ordered_counter(filtered_data, COUNTRY)
+  groups_overall = _ordered_counter(filtered_data, key)
 
-  all_colors = dict(zip(["inne"] + list(countries_overall.keys()),
+  all_colors = dict(zip(["inne"] + list(groups_overall.keys()),
     ["tab:grey", "tab:green", "tab:red", "tab:blue", "tab:orange", "tab:olive",
      "tab:purple", "tab:brown", "tab:cyan",]))
 
-  last_country = 4
+  groups_overall = _process_small_groups(groups_overall)
 
-  other_countries = [k for i, k in enumerate(countries_overall.keys())
-      if i > last_country and countries_overall[k] != list(countries_overall.keys())[last_country]]
-  num_other_countries = sum([countries_overall[k] for k in other_countries])
-  for country in other_countries:
-    countries_overall.pop(country)
-  countries_overall["inne"] = num_other_countries
-
-  colors = [all_colors[c] for c in countries_overall.keys()]
-  fig, axes = plt.subplots(1, len(degrees) + 1)
-  axes[0].pie(countries_overall.values(), labels=countries_overall.keys(), autopct='%1.0f%%', colors=colors)
+  colors = [all_colors[c] for c in groups_overall.keys()]
+  fig, axes = plt.subplots(2, (len(degrees) + 2)//2)
+  axes = axes.flatten()
+  labels = [_process_label(l) for l in groups_overall.keys()]
+  axes[0].pie(groups_overall.values(), labels=labels, autopct='%1.0f%%', colors=colors)
   axes[0].set_title("ogółem")
 
   for did, d in enumerate(degrees):
     axes[did + 1].set_title(d)
-    within_degree_countries = _ordered_counter(per_degree[d], COUNTRY)
-    single_countries = [k for k, v in within_degree_countries.items() if v == 1]
-    num_single_countries = len(single_countries)
-    for country in single_countries:
-      within_degree_countries.pop(country)
+    within_degree_values = _ordered_counter(per_degree[d], key)
+    within_degree_values = _process_small_groups(within_degree_values)
 
-    within_degree_countries["inne"] = num_single_countries
-    print(within_degree_countries)
-    colors = [all_colors[c] for c in within_degree_countries.keys()]
-    axes[did + 1].pie(within_degree_countries.values(), labels=within_degree_countries.keys(), autopct='%1.0f%%', colors=colors)
+    colors = [all_colors[c] for c in within_degree_values.keys()]
+
+    labels = [_process_label(l) for l in within_degree_values.keys()]
+    axes[did + 1].pie(within_degree_values.values(), labels=labels, autopct='%1.0f%%', colors=colors)
+
+  handles, labels = _prepare_legend(axes)
+  # fig.legend(handles, labels)
 
   fig.show()
 
 
-# TODO: deduplicate
 def gender_plots(data):
   filtered_data = [dict(r) for r in data if r[GENDER]]
 
@@ -274,6 +311,18 @@ def working_hours_dist(data):
   plt.show()
 
 
+def mim_satisfaction_dist(data):
+  filtered_data = [r for r in data if r[MIM_SATISFACTION]]
+  satisfaction = sorted([r[MIM_SATISFACTION] for r in filtered_data])
+  plt.title("Wpływ studiów na MIMie na karierę")
+  plt.xlabel("stopień")
+  plt.ylabel("liczba absolwentów")
+  _, bins, _ = plt.hist(satisfaction, bins=6, edgecolor="white")
+  plt.xticks([b + 0.5 for b in bins])
+
+  plt.show()
+
+
 def _filter_incomes(data):
   clean_data = []
   empty = 0
@@ -343,15 +392,27 @@ def median_comp_in_group(data, group):
   for r in filtered_data:
     per_group[r[group]].append(r)
 
-  print(per_group.keys())
-  print(len(per_group['nauczyciel / prowadzący szkolenia']))
+  if group == HIGHEST_EDUCATION:
+    def key(x):
+      if x == "licencjat": return 0
+      if x == "magister": return 1
+      if x == "doktor": return 2
+  else:
+    key = None
 
   group_values = sorted([
-      group for group, responses in per_group.items() if len(responses) >= 5])
+      group for group, responses in per_group.items() if len(responses) >= 5],
+      key=key)
 
   plt.figure()
-  plt.title(f"{group} a mediana łącznych miesięcznych zarobków")
+  if group == HIGHEST_EDUCATION:
+    title_group = "Najwyższy stopień naukowy ogółem"
+  else:
+    title_group = group
+
+  plt.title(f"{title_group} a mediana łącznych miesięcznych zarobków")
   plt.ylabel("tys. PLN, biorąc pod uwagę PPP")
+  plt.xlabel(group)
 
   group_medians = []
   deviations = []
@@ -362,6 +423,7 @@ def median_comp_in_group(data, group):
       canonical_values.append(g[:g.find('/')])
     else:
       canonical_values.append(g)
+
     subdata = [r for r in filtered_data if r[group] == g]
     _, incomes_ppp, _, group_median_ppp = _process_incomes(subdata, TOTAL_COMP)
 
@@ -378,16 +440,34 @@ def median_comp_in_group(data, group):
   plt.show()
 
 
+def filling_time(data):
+  timestamps_str = [r["Timestamp"] for r in data if r["Timestamp"]]
+  timestamps = [datetime.strptime(t, "%d/%m/%Y %H:%M:%S") for t in timestamps_str]
+
+  fig, ax = plt.subplots(1,1)
+  _, bins, _ = ax.hist(timestamps, bins=30, )
+  ax.xaxis.set_major_formatter(mdates.DateFormatter("%d.%m %H:00"))
+  ax.set_ylabel("liczba absolwentów")
+  ax.set_xlabel("czas")
+  ax.set_title("Rozkład czasu wypełenienia ankiety")
+  fig.show()
+
+
 def to_run(data):
-  countries_plots(data)
-  gender_plots(data)
+  pie_per_degree(data, COUNTRY)
+  pie_per_degree(data, GENDER)
+  pie_per_degree(data, PROFESSION)
   comp_distribution(data)
   base_vs_total_comp(data)
   working_hours_dist(data)
+  mim_satisfaction_dist(data)
 
   median_comp_in_group(data, GENDER)
   median_comp_in_group(data, COUNTRY)
-  median_comp_in_group(data, DEGREE)
+  median_comp_in_group(data, DEGREE)  # bioinf error bars look wrong, but it's ok.
   median_comp_in_group(data, GRADUATION_YEAR)
   median_comp_in_group(data, HIGHEST_EDUCATION)
   median_comp_in_group(data, PROFESSION)
+  median_comp_in_group(data, MIM_SATISFACTION)
+
+  filling_time(data)
