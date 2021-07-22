@@ -57,7 +57,7 @@ Przy podawaniu statystyk dla grup, pominąłem grupy o mniej niż 5-ciu członk
 
 Słupki błędu odpowiadają centylom: 40-60 wokół mediany.
 
-![Zarobki a kraj](plots/country_comp.png){width=80% height=80%}
+![Zarobki a kraj. Słupki błędu odpowiadają centylom: 40-60 wokół mediany.](plots/country_comp.png){width=80% height=80%}
 
 ![Zarobki a zawód](plots/profession_comp.png){width=80% height=80%}
 
@@ -79,7 +79,7 @@ Słupki błędu odpowiadają centylom: 40-60 wokół mediany.
 
 ![Liczba godzin pracy w tygodniu](plots/work_hours.png){width=80% height=80%}
 
-![Wpływ studiów na MIMie na karierę](plots/mim_satisfaction.png){width=80% height=80%}
+![W jakim stopniu studia MIMie pomogłby Ci w osiągnięciu obecnej kariery](plots/mim_satisfaction.png){width=80% height=80%}
 
 ![Moment wypełnienia ankiety](plots/filling_time_dist.png){width=80% height=80%}
 
