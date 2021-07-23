@@ -49,21 +49,38 @@ Przy podawaniu statystyk dla grup, pominąłem grupy o mniej niż 5-ciu członk
 
 ![Płeć a kierunek](plots/degree_gender.png){width=80% height=80%}
 
-![Zawód a kierunek](plots/degree_profession.png){width=80% height=80%}
+![Zawód a kierunek. Dla oszczędności miejsca, CEO oznacza odpowiedź "CEO/założyciel", aktuariusz "aktuariusz/analityk finansowy/finansista", team lead "team lead/engineering manager", a nauczyciel "nauczyciel/prowadzący szkolenia". ](plots/degree_profession.png){width=80% height=80%}
 
 ![Kraj a kierunek](plots/degree_country.png){width=80% height=80%}
 
+### Zależność cech od stopnia naukowego
+
+![Kraj a stopień naukowy](plots/education_country.png){width=70% height=70%}
+
+![Zawód a stopień naukowy. Dla oszczędności miejsca, CEO oznacza odpowiedź "CEO/założyciel", aktuariusz "aktuariusz/analityk finansowy/finansista", team lead "team lead/engineering manager", a nauczyciel "nauczyciel/prowadzący szkolenia". ](plots/education_profession.png){width=80% height=80%}
+
+### Zawód przy różnych sposobach zatrudnienia
+
+![Zawód a sposób zatrudnienia. Dla oszczędności miejsca, CEO oznacza odpowiedź "CEO/założyciel", aktuariusz "aktuariusz/analityk finansowy/finansista", team lead "team lead/engineering manager", a nauczyciel "nauczyciel/prowadzący szkolenia". ](plots/employment_kind_profession.png){width=80% height=80%}
+
 ### Zależność zarobków od cech
 
-Słupki błędu odpowiadają centylom: 40-60 wokół mediany.
+Słupki błędu odpowiadają centylom: 40-60 wokół mediany. Zarobki/pensje są podane brutto. Małe liczby na dole słupków określają liczbę osób w danej grupie (wielkość próbki).
+
+Pełne pytania o zarobki:
+
+- Podstawowa roczna pensja w narodowej walucie tego kraju. Podstawowa pensja brutto, bez bonusów, 13-tek, wartości akcji (base salary). W przypadku absolwentów kończących studia w 2019, proszę podać zarobki z 2019 przeskalowane do całego roku.
+- Łączne roczne zarobki w narodowej walucie tego kraju. Zarobki brutto łącznie z bonusami, 13-tkami, wartością zvestowanych akcji (total compensation), jeśli inne niż powyżej.
 
 ![Zarobki a kraj. Słupki błędu odpowiadają centylom: 40-60 wokół mediany.](plots/country_comp.png){width=80% height=80%}
 
-![Zarobki a zawód](plots/profession_comp.png){width=80% height=80%}
+![Zarobki a zawód. Dla oszczędności miejsca, CEO oznacza odpowiedź "CEO/założyciel", aktuariusz "aktuariusz/analityk finansowy/finansista", team lead "team lead/engineering manager", a nauczyciel "nauczyciel/prowadzący szkolenia".](plots/profession_comp.png){width=80% height=80%}
 
 ![Zarobki a kierunek](plots/degree_comp.png){width=80% height=80%}
 
-![Zarobki a stopień naukowy](plots/education_comp.png){width=80% height=80%}
+![Zarobki a stopień naukowy](plots/education_comp.png){width=70% height=70%}
+
+![Zarobki osób ze stopniem doktora a zatrudnienie jako pracownik akademicki lub nie](plots/phd_industry_or_not.png){width=80% height=80%}
 
 ![Zarobki a płeć](plots/gender_comp.png){width=80% height=80%}
 
@@ -79,7 +96,7 @@ Słupki błędu odpowiadają centylom: 40-60 wokół mediany.
 
 ![Liczba godzin pracy w tygodniu](plots/work_hours.png){width=80% height=80%}
 
-![W jakim stopniu studia MIMie pomogłby Ci w osiągnięciu obecnej kariery](plots/mim_satisfaction.png){width=80% height=80%}
+![W jakim stopniu studia MIMie pomogły Ci w osiągnięciu obecnej kariery](plots/mim_satisfaction.png){width=80% height=80%}
 
 ![Moment wypełnienia ankiety](plots/filling_time_dist.png){width=80% height=80%}
 

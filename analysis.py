@@ -167,24 +167,26 @@ def _prepare_legend(axes):
   return all_handles, all_labels
 
 
-def pie_per_degree(data, key):
-  filtered_data = [dict(r) for r in data if r[key]]
+def pie_per_degree(data, key, group_key):
+  filtered_data = [dict(r) for r in data if r[key] and r[group_key]]
   for i, r in enumerate(filtered_data):
     if "Stany Zjednoczone Ameryki" in r[key]:
       r[key] = "USA"
 
   per_degree = collections.defaultdict(lambda: [])
   for r in filtered_data:
-    per_degree[r[DEGREE]].append(r)
+    per_degree[r[group_key]].append(r)
   
   degrees = [degree
       for degree, responses in per_degree.items() if len(responses) >= 5]
 
   groups_overall = _ordered_counter(filtered_data, key)
+  print("here", groups_overall, degrees)
 
   all_colors = dict(zip(["inne"] + list(groups_overall.keys()),
     ["tab:grey", "tab:green", "tab:red", "tab:blue", "tab:orange", "tab:olive",
-     "tab:purple", "tab:brown", "tab:cyan",]))
+     "tab:purple", "tab:brown", "tab:cyan", "black", "yellow", "red", "green", "blue", "white", "pink", "purple"]))
+  print("all_colors", all_colors)
 
   groups_overall = _process_small_groups(groups_overall)
 
@@ -192,49 +194,34 @@ def pie_per_degree(data, key):
   fig, axes = plt.subplots(2, (len(degrees) + 2)//2)
   axes = axes.flatten()
   labels = [_process_label(l) for l in groups_overall.keys()]
+  # TODO: consider giving absolute numbers instead of percentage with
+  def autopct_format(values):
+    def my_format(pct):
+        total = sum(values)
+        val = int(round(pct*total/100.0))
+        return '{v:d}'.format(v=val)
+    return my_format
+
   axes[0].pie(groups_overall.values(), labels=labels, autopct='%1.0f%%', colors=colors)
   axes[0].set_title("ogółem")
 
   for did, d in enumerate(degrees):
+    print(d)
     axes[did + 1].set_title(d)
     within_degree_values = _ordered_counter(per_degree[d], key)
     within_degree_values = _process_small_groups(within_degree_values)
 
+    print("all_colors", all_colors)
+
     colors = [all_colors[c] for c in within_degree_values.keys()]
+    print("colors", colors)
 
     labels = [_process_label(l) for l in within_degree_values.keys()]
+    print("labels", labels)
     axes[did + 1].pie(within_degree_values.values(), labels=labels, autopct='%1.0f%%', colors=colors)
 
   handles, labels = _prepare_legend(axes)
   # fig.legend(handles, labels)
-
-  fig.show()
-
-
-def gender_plots(data):
-  filtered_data = [dict(r) for r in data if r[GENDER]]
-
-  per_degree = collections.defaultdict(lambda: [])
-  for r in filtered_data:
-    per_degree[r[DEGREE]].append(r)
-  
-  degrees = [degree
-      for degree, responses in per_degree.items() if len(responses) >= 5]
-
-  genders_overall = _ordered_counter(filtered_data, GENDER)
-
-  all_colors = dict(zip(genders_overall.keys(),
-    ["tab:green", "tab:red", "tab:blue", "tab:orange", "tab:olive"]))
-
-  fig, axes = plt.subplots(1, len(degrees) + 1)
-  axes[0].pie(genders_overall.values(), labels=genders_overall.keys(), autopct='%1.0f%%', colors=all_colors.values())
-  axes[0].set_title("ogółem")
-
-  for did, d in enumerate(degrees):
-    axes[did + 1].set_title(d)
-    within_degree_genders = _ordered_counter(per_degree[d], GENDER)
-    colors = [all_colors[c] for c in within_degree_genders.keys()]
-    axes[did + 1].pie(within_degree_genders.values(), labels=within_degree_genders.keys(), autopct='%1.0f%%', colors=colors)
 
   fig.show()
 
@@ -407,16 +394,19 @@ def median_comp_in_group(data, group):
   plt.figure()
   if group == HIGHEST_EDUCATION:
     title_group = "Najwyższy stopień naukowy ogółem"
+  elif group == DEGREE:
+    title_group = "Kierunek"
   else:
     title_group = group
 
   plt.title(f"{title_group} a mediana łącznych miesięcznych zarobków")
   plt.ylabel("tys. PLN, biorąc pod uwagę PPP")
-  plt.xlabel(group)
+  plt.xlabel(title_group)
 
   group_medians = []
   deviations = []
   canonical_values = []
+  num_samples = []
 
   for g in group_values:
     if '/' in g:
@@ -432,10 +422,30 @@ def median_comp_in_group(data, group):
     lower_perc = group_median_ppp - np.percentile(incomes_ppp, 50-k)
     higher_perc = np.percentile(incomes_ppp, 50+k) - group_median_ppp
     deviations.append([lower_perc, higher_perc])
+    num_samples.append(len(incomes_ppp))
 
-  plt.bar(list(range(len(group_medians))), group_medians, yerr=list(zip(*deviations)))
+  bars = plt.bar(list(range(len(group_medians))), group_medians, yerr=list(zip(*deviations)))
 
   plt.xticks(list(range(len(group_medians))), canonical_values)
+  for idx, rect in enumerate(bars):
+    height = rect.get_height()
+    plt.text(rect.get_x() + rect.get_width()/2., 1., num_samples[idx],
+             ha='center', va='bottom')
+
+  plt.show()
+
+
+def abroad_graduation_year(data):
+  filtered_data = [r for r in data if r[COUNTRY] and r[GRADUATION_YEAR]]
+  graduation_years = sorted(list(set([r[GRADUATION_YEAR] for r in filtered_data])))
+
+  perc_abroad = []
+  for g in graduation_years:
+    subdata = [0. if r[COUNTRY] == "Polska" else 1. for r in filtered_data if r[GRADUATION_YEAR] == g]
+    perc_abroad.append(np.mean(subdata))
+
+  plt.bar(list(range(len(graduation_years))), perc_abroad)
+  plt.xticks(list(range(len(graduation_years))), graduation_years)
 
   plt.show()
 
@@ -454,9 +464,12 @@ def filling_time(data):
 
 
 def to_run(data):
-  pie_per_degree(data, COUNTRY)
-  pie_per_degree(data, GENDER)
-  pie_per_degree(data, PROFESSION)
+  pie_per_degree(data, COUNTRY, DEGREE)
+  pie_per_degree(data, GENDER, DEGREE)
+  pie_per_degree(data, PROFESSION, DEGREE)
+  pie_per_degree(data, COUNTRY, HIGHEST_EDUCATION)
+  pie_per_degree(data, PROFESSION, HIGHEST_EDUCATION)
+  pie_per_degree(data, PROFESSION, EMPLOYMENT_KIND)
   comp_distribution(data)
   base_vs_total_comp(data)
   working_hours_dist(data)
