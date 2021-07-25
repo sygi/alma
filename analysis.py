@@ -391,7 +391,12 @@ def median_comp_in_group(data, group):
       group for group, responses in per_group.items() if len(responses) >= 5],
       key=key)
 
-  plt.figure()
+  if group == COUNTRY:
+    both = True
+  else:
+    both = False
+
+  fig, axes = plt.subplots(1, 2 if both else 1)
   if group == HIGHEST_EDUCATION:
     title_group = "Najwyższy stopień naukowy ogółem"
   elif group == DEGREE:
@@ -399,40 +404,52 @@ def median_comp_in_group(data, group):
   else:
     title_group = group
 
-  plt.title(f"{title_group} a mediana łącznych miesięcznych zarobków")
-  plt.ylabel("tys. PLN, biorąc pod uwagę PPP")
-  plt.xlabel(title_group)
-
-  group_medians = []
-  deviations = []
-  canonical_values = []
-  num_samples = []
-
-  for g in group_values:
-    if '/' in g:
-      canonical_values.append(g[:g.find('/')])
+  fig.suptitle(f"{title_group} a mediana łącznych miesięcznych zarobków")
+  for i, ax in enumerate(axes):
+    if i == 0:
+      ax.set_ylabel("tys. PLN, biorąc pod uwagę PPP")
     else:
-      canonical_values.append(g)
+      ax.set_ylabel("tys. PLN (nominalnie)")
 
-    subdata = [r for r in filtered_data if r[group] == g]
-    _, incomes_ppp, _, group_median_ppp = _process_incomes(subdata, TOTAL_COMP)
+    ax.set_xlabel(title_group)
 
-    group_medians.append(group_median_ppp)
-    k = 10
-    lower_perc = group_median_ppp - np.percentile(incomes_ppp, 50-k)
-    higher_perc = np.percentile(incomes_ppp, 50+k) - group_median_ppp
-    deviations.append([lower_perc, higher_perc])
-    num_samples.append(len(incomes_ppp))
+    group_medians = []
+    deviations = []
+    canonical_values = []
+    num_samples = []
 
-  bars = plt.bar(list(range(len(group_medians))), group_medians, yerr=list(zip(*deviations)))
+    for g in group_values:
+      if '/' in g:
+        canonical_values.append(g[:g.find('/')])
+      else:
+        canonical_values.append(g)
 
-  plt.xticks(list(range(len(group_medians))), canonical_values)
-  for idx, rect in enumerate(bars):
-    height = rect.get_height()
-    plt.text(rect.get_x() + rect.get_width()/2., 1., num_samples[idx],
-             ha='center', va='bottom')
+      subdata = [r for r in filtered_data if r[group] == g]
+      incomes_pln, incomes_ppp, group_median_pln, group_median_ppp = _process_incomes(subdata, TOTAL_COMP)
+      if i == 0:
+        incomes = incomes_ppp
+        group_median = group_median_ppp
+      else:
+        incomes = incomes_pln
+        group_median = group_median_pln
 
-  plt.show()
+      group_medians.append(group_median)
+      k = 10
+      lower_perc = group_median - np.percentile(incomes, 50-k)
+      higher_perc = np.percentile(incomes, 50+k) - group_median
+      deviations.append([lower_perc, higher_perc])
+      num_samples.append(len(incomes))
+
+    bars = ax.bar(list(range(len(group_medians))), group_medians, yerr=list(zip(*deviations)))
+
+    ax.set_xticks(list(range(len(group_medians))))
+    ax.set_xticklabels(canonical_values)
+    for idx, rect in enumerate(bars):
+      height = rect.get_height()
+      ax.text(rect.get_x() + rect.get_width()/2., 1., num_samples[idx],
+               ha='center', va='bottom')
+
+  fig.show()
 
 
 def abroad_graduation_year(data):
