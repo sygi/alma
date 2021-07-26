@@ -397,6 +397,8 @@ def median_comp_in_group(data, group):
     both = False
 
   fig, axes = plt.subplots(1, 2 if both else 1)
+  if not both:
+    axes = [axes]
   if group == HIGHEST_EDUCATION:
     title_group = "Najwyższy stopień naukowy ogółem"
   elif group == DEGREE:
